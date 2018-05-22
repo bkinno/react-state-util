@@ -1,0 +1,24 @@
+{
+  "name": "react-state-utils",
+  "version": "0.0.1",
+  "description": "Add global state to React (like root style in AngularJS but keep the React philosophie)",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bkinno/react-state-utils.git"
+  },
+  "keywords": [
+    "react",
+    "global",
+    "state"
+  ],
+  "author": "Bkinno team",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/bkinno/react-state-utils/issues"
+  },
+  "homepage": "https://github.com/bkinno/react-state-utils#readme"
+}
