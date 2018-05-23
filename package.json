@@ -1,6 +1,6 @@
 {
   "name": "react-state-utils",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Add global state to React (like root style in AngularJS but keep the React philosophie)",
   "main": "index.js",
   "scripts": {

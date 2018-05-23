@@ -10,15 +10,17 @@
  * For changing global state: use this.setGlobalState, everything just work like this.setState
  */
 
-let _components = [];
-let _globalState = {};
-
+import React from "react";
 
 let printCallStack = () => {
     let stack = new Error().stack;
     console.log('DEBUG:', stack);
 };
 
+let uuid = () => {
+    let s4 = () => Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
+    return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
+};
 
 let _propagateGlobalState = async function(newState, currentContext, listenners, globalState) {
     let updatedAttrs = Object.keys(newState);
@@ -49,11 +51,77 @@ let _propagateGlobalState = async function(newState, currentContext, listenners,
             }
         });
 
-        shouldUpdate && listennerContext.forceUpdate();
+        listennerContext._isMounted && shouldUpdate && listennerContext.forceUpdate();
     });
 };
 
 
+// autoState ======================================================================= //
+/**
+ * Auto update localState, globalState when localState, globalState changed
+ * @param WrappedComponent
+ */
+let _components1 = [];
+let _globalState1 = {};
+
+export function autoState(WrappedComponent) {
+    WrappedComponent.prototype.componentWillMount = function() {
+        let component = this;
+
+        // Local State
+        let _localState = component.localState || {};
+        component.localState = new Proxy(_localState, {
+            get: (target, name) => {
+                return target[name];
+            },
+            set: (target, name, value) => {
+                target[name] = value;
+                component.forceUpdate();
+                return true;
+            }
+        });
+
+        // Global State
+        component._global = new Set();
+
+        component.globalState = new Proxy({}, {
+            get: (target, name) => {
+                component._global.add(name);
+                return _globalState[name];
+            },
+            set: (target, name, value) => {
+                component._global.add(name);
+                _globalState[name] = value;
+
+                let newState = {[name]: value};
+                _propagateGlobalState(newState, this, _components1, _globalState1);
+
+                return true;
+            }
+        });
+
+        _components.push(component);
+    };
+
+    return (props) => <WrappedComponent {...props} />
+}
+
+
+// connectGlobalState ======================================================================= //
+let _components = [];
+let _globalState = {};
+
+/**
+ * Set globalState using function setGlobalState
+ * @param WrappedComponent
+ * @param debug: print out call stack when setGlobalState is called
+ *
+ * In wrapped component: just use this.globalState.varName
+ * by get value from globalState, we add watcher automatically to component
+ * and component will re-render only when this varName is changed from globalState
+ *
+ * For changing global state: use this.setGlobalState, everything just work like this.setState
+ */
 export function connectGlobalState(WrappedComponent, debug=false) {
     return class ConnectedGlobalState extends WrappedComponent {
         // Do not use array function, use 'function' instead for having 'this' pointing to WrappedComponent
@@ -64,7 +132,7 @@ export function connectGlobalState(WrappedComponent, debug=false) {
 
         componentWillMount() {
             let component = this;
-            component._uid = Math.random();
+            component._uid = WrappedComponent.name + '_' + uuid();
 
             component._global = new Set();
 
@@ -89,7 +157,21 @@ export function connectGlobalState(WrappedComponent, debug=false) {
             if (super.componentWillMount) {
                 super.componentWillMount();
             }
+
+            component._isMounted = true;
         };
+
+        componentWillUnmount() {
+            let component = this;
+            _components = _components.filter(c => c._uid !== component._uid);
+
+            // Call parent lifecycle
+            if (super.componentWillUnmount) {
+                super.componentWillUnmount();
+            }
+
+            component._isMounted = false;
+        }
 
         render = super.render;
     };
