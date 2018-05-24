@@ -1,26 +1,51 @@
+'use strict';
+
+
 /**
- * Set globalState using function setGlobalState
- * @param WrappedComponent
- * @param debug: print out call stack when setGlobalState is called
- *
- * In wrapped component: just use this.globalState.varName
- * by get value from globalState, we add watcher automatically to component
- * and component will re-render only when this varName is changed from globalState
- *
- * For changing global state: use this.setGlobalState, everything just work like this.setState
+ * Internal memory for keeping global values
  */
+let _components = [];  // Components connected to global state
+let _globalState = {};  // Keep global state values
 
-let _components = [];
-let _globalState = {};
+
+/**
+ * Create store
+ */
+export function initGlobalState(initData) {
+    _globalState = initData;
+};
 
 
-let printCallStack = () => {
+/**
+ * Get all global state value
+ */
+export function getGlobalState() {
+    return _globalState;
+};
+
+
+/**
+ * Print call stack for debugging, to find where and how setGlobalState is called
+ */
+let _printCallStack = () => {
     let stack = new Error().stack;
     console.log('DEBUG:', stack);
 };
 
 
-let _propagateGlobalState = async function(newState, currentContext, listenners, globalState) {
+/**
+ * Scan all connected components and detect which components will be updated
+ * when changing state
+ *
+ * @param newState: new state value
+ * @param currentContext: React component object
+ * @returns {Promise<void>}
+ * @private
+ */
+let _propagateGlobalState = async function(newState, currentContext) {
+    let listenners = _components;
+    let globalState = _globalState;
+
     let updatedAttrs = Object.keys(newState);
 
     // If value is Promise then we have to wait for having value
@@ -54,12 +79,23 @@ let _propagateGlobalState = async function(newState, currentContext, listenners,
 };
 
 
+/**
+ * Set globalState using function setGlobalState
+ * @param WrappedComponent
+ * @param debug: print out call stack when setGlobalState is called
+ *
+ * In wrapped component: just use this.globalState.varName
+ * by get value from globalState, we add watcher automatically to component
+ * and component will re-render only when this varName is changed from globalState
+ *
+ * For changing global state: use this.setGlobalState, everything just work like this.setState
+ */
 export function connectGlobalState(WrappedComponent, debug=false) {
     return class ConnectedGlobalState extends WrappedComponent {
         // Do not use array function, use 'function' instead for having 'this' pointing to WrappedComponent
         setGlobalState(newState, debug=debug) {
             debug && printCallStack();
-            _propagateGlobalState(newState, this, _components, _globalState);
+            _propagateGlobalState(newState, this);
         };
 
         componentWillMount() {
@@ -70,8 +106,8 @@ export function connectGlobalState(WrappedComponent, debug=false) {
 
             component.globalState = new Proxy({}, {
                 get: (target, name) => {
-                    if (name === '_all') {
-                        return _globalState;
+                    if (!(name in _globalState)) {
+                        console.warn(name + ' has not been declared in globalState. To declare it use: initGlobalState');
                     }
 
                     component._global.add(name);
