@@ -1,6 +1,6 @@
 {
   "name": "react-state-util",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Add global state to React (like root style in AngularJS but keep the React philosophie)",
   "devDependencies": {
     "react": "^16.0.0",

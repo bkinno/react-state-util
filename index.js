@@ -25,15 +25,6 @@ export function getGlobalState() {
 
 
 /**
- * Print call stack for debugging, to find where and how setGlobalState is called
- */
-let _printCallStack = () => {
-    let stack = new Error().stack;
-    console.log('DEBUG:', stack);
-};
-
-
-/**
  * Generate uuid
  */
 let uuid = () => {
@@ -91,7 +82,6 @@ let _propagateGlobalState = async function(newState, currentContext) {
 /**
  * Set globalState using function setGlobalState
  * @param WrappedComponent
- * @param debug: print out call stack when setGlobalState is called
  *
  * In wrapped component: just use this.globalState.varName
  * by get value from globalState, we add watcher automatically to component
@@ -99,11 +89,10 @@ let _propagateGlobalState = async function(newState, currentContext) {
  *
  * For changing global state: use this.setGlobalState, everything just work like this.setState
  */
-export function connectGlobalState(WrappedComponent, debug=false) {
+export function connectGlobalState(WrappedComponent) {
     return class ConnectedGlobalState extends WrappedComponent {
         // Do not use array function, use 'function' instead for having 'this' pointing to WrappedComponent
-        setGlobalState(newState, debug=debug) {
-            debug && printCallStack();
+        setGlobalState(newState) {
             _propagateGlobalState(newState, this);
         };
 
@@ -149,7 +138,5 @@ export function connectGlobalState(WrappedComponent, debug=false) {
 
             component._isMounted = false;
         }
-
-        render = super.render;
     };
 }
