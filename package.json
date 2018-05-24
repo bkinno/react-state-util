@@ -1,5 +1,5 @@
 {
-  "name": "react-state-utils",
+  "name": "react-state-util",
   "version": "0.0.4",
   "description": "Add global state to React (like root style in AngularJS but keep the React philosophie)",
   "devDependencies": {
@@ -12,7 +12,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/bkinno/react-state-utils.git"
+    "url": "git+https://github.com/bkinno/react-state-util.git"
   },
   "keywords": [
     "react",
@@ -22,7 +22,7 @@
   "author": "Bkinno team",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/bkinno/react-state-utils/issues"
+    "url": "https://github.com/bkinno/react-state-util/issues"
   },
-  "homepage": "https://github.com/bkinno/react-state-utils#readme"
+  "homepage": "https://github.com/bkinno/react-state-util#readme"
 }
