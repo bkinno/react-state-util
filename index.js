@@ -34,6 +34,15 @@ let _printCallStack = () => {
 
 
 /**
+ * Generate uuid
+ */
+let uuid = () => {
+    let s4 = () => Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
+    return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
+};
+
+
+/**
  * Scan all connected components and detect which components will be updated
  * when changing state
  *
@@ -74,7 +83,7 @@ let _propagateGlobalState = async function(newState, currentContext) {
             }
         });
 
-        shouldUpdate && listennerContext.forceUpdate();
+        listennerContext._isMounted && shouldUpdate && listennerContext.forceUpdate();
     });
 };
 
@@ -100,7 +109,7 @@ export function connectGlobalState(WrappedComponent, debug=false) {
 
         componentWillMount() {
             let component = this;
-            component._uid = Math.random();
+            component._uid = WrappedComponent.name + '_' + uuid();
 
             component._global = new Set();
 
@@ -125,7 +134,21 @@ export function connectGlobalState(WrappedComponent, debug=false) {
             if (super.componentWillMount) {
                 super.componentWillMount();
             }
+
+            component._isMounted = true;
         };
+
+        componentWillUnmount() {
+            let component = this;
+            _components = _components.filter(c => c._uid !== component._uid);
+
+            // Call parent lifecycle
+            if (super.componentWillUnmount) {
+                super.componentWillUnmount();
+            }
+
+            component._isMounted = false;
+        }
 
         render = super.render;
     };
